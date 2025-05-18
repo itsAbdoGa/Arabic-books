@@ -1,0 +1,241 @@
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مكتبة الكتب العربية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .hero-section {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1920/500');
+            background-size: cover;
+            color: white;
+            padding: 100px 0;
+            margin-bottom: 30px;
+        }
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border-radius: 0 0 5px 5px;
+            background-color: white; /* Changed to white background */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #d4d4d4;
+            color: #333; /* Ensuring text is dark on white background */
+        }
+        .autocomplete-items div:hover {
+            background-color: #f0f0f0; /* Light gray on hover */
+            color: #000; /* Black text on hover for better contrast */
+        }
+        .book-card {
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .book-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .book-author {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 30px 0;
+            margin-top: 50px;
+        }
+        .autocomplete-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">مكتبة الكتب العربية</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">الرئيسية</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/login">تسجيل دخول المسؤول</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 mb-4">ابحث عن كتاب</h1>
+            <p class="lead mb-5">اكتشف آلاف الكتب العربية في مختلف المجالات</p>
+            
+            <div class="search-container">
+                <div class="autocomplete-container">
+                    <input type="text" id="searchInput" class="form-control form-control-lg" 
+                           placeholder="ابحث عن كتاب أو مؤلف..." autocomplete="off">
+                    <div id="autocompleteResults" class="autocomplete-items"></div>
+                </div>
+                <button id="searchButton" class="btn btn-primary btn-lg w-100 mt-3">
+                    <i class="fas fa-search"></i> بحث
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="searchResults">
+            <div class="text-center my-5">
+                <p class="text-muted">ابحث عن كتاب للبدء</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <p>جميع الحقوق محفوظة © مكتبة الكتب العربية 2025</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const autocompleteResults = document.getElementById('autocompleteResults');
+            const searchResults = document.getElementById('searchResults');
+            
+            // Search functionality
+            function performSearch() {
+                const query = searchInput.value.trim();
+                if (query) {
+                    fetch(`/search?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(books => {
+                            displaySearchResults(books);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                }
+            }
+            
+            // Handle search button click
+            searchButton.addEventListener('click', performSearch);
+            
+            // Handle Enter key in search input
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // Autocomplete functionality
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query) {
+                    fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(suggestions => {
+                            displayAutocomplete(suggestions);
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                } else {
+                    autocompleteResults.innerHTML = '';
+                }
+            });
+            
+            // Close autocomplete when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== searchInput) {
+                    autocompleteResults.innerHTML = '';
+                }
+            });
+            
+            // Display autocomplete suggestions
+            function displayAutocomplete(suggestions) {
+                autocompleteResults.innerHTML = '';
+                
+                suggestions.forEach(suggestion => {
+                    const div = document.createElement('div');
+                    div.textContent = suggestion;
+                    div.addEventListener('click', function() {
+                        searchInput.value = suggestion;
+                        autocompleteResults.innerHTML = '';
+                        performSearch();
+                    });
+                    autocompleteResults.appendChild(div);
+                });
+            }
+            
+            // Display search results
+            function displaySearchResults(books) {
+                if (books.length > 0) {
+                    let html = '<h2 class="mb-4">نتائج البحث</h2>';
+                    html += '<div class="row">';
+                    
+                    books.forEach((book) => {
+                        html += `
+                            <div class="col-md-4 col-lg-3 mb-4">
+                                <div class="card book-card h-100">
+                                    <div class="card-body">
+                                        <div class="book-title">${book.book_name}</div>
+                                        <div class="book-author">${book.author}</div>
+                                        <hr>
+                                        <p>المصدر: ${book.source}</p>
+                                        <p>عدد المجلدات: ${book.num_of_volumes}</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-top-0">
+                                        <a href="/book/${book.id}" class="btn btn-outline-primary btn-sm w-100">عرض التفاصيل</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    searchResults.innerHTML = html;
+                } else {
+                    searchResults.innerHTML = `
+                        <div class="text-center my-5">
+                            <h3>لا توجد نتائج</h3>
+                            <p class="text-muted">لم يتم العثور على كتب مطابقة لبحثك. يرجى المحاولة بكلمات مختلفة.</p>
+                        </div>
+                    `;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استيراد الكتب - مكتبة الكتب العربية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            min-height: calc(100vh - 56px);
+            padding-top: 20px;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: #0d6efd;
+        }
+        .sidebar .nav-link i {
+            margin-left: 10px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .upload-form {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+        }
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-container input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 15px 0;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .template-section {
+            margin-top: 30px;
+        }
+        .csv-example {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">مكتبة الكتب العربية</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">الرئيسية</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/logout">تسجيل الخروج</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/admin/import">
+                                <i class="fas fa-file-import"></i>
+                                استيراد الكتب
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mt-3">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">استيراد الكتب</h1>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="upload-form">
+                            <h5 class="mb-3">رفع ملف CSV</h5>
+                            <form method="post" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <p>يرجى اختيار ملف CSV يحتوي على بيانات الكتب. يجب أن يحتوي الملف على الأعمدة التالية:</p>
+                                    <ul>
+                                        <li>source (المصدر)</li>
+                                        <li>author (المؤلف)</li>
+                                        <li>book_name (اسم الكتاب)</li>
+                                        <li>num_of_volumes (عدد المجلدات)</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="file-input-container">
+                                        <button type="button" class="btn btn-secondary">
+                                            <i class="fas fa-file-csv me-2"></i> اختر ملف CSV
+                                        </button>
+                                        <input type="file" name="file" id="csvFile" accept=".csv">
+                                    </div>
+                                    <div class="file-name" id="fileName"></div>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    تحذير: سيؤدي رفع ملف CSV جديد إلى استبدال البيانات الحالية.
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-upload me-2"></i> رفع الملف
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="template-section">
+                            <h5>مثال على تنسيق ملف CSV</h5>
+                            <div class="csv-example">
+                                source,author,book_name,num_of_volumes<br>
+                                مكتبة الأزهر,الإمام الغزالي,إحياء علوم الدين,4<br>
+                                دار الكتب المصرية,ابن خلدون,المقدمة,1<br>
+                                مكتبة الإسكندرية,طه حسين,الأيام,3<br>
+                                دار المعرفة,نجيب محفوظ,ثلاثية القاهرة,3<br>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>إرشادات</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>يجب أن يكون الملف بتنسيق CSV.</li>
+                                    <li>يجب أن يحتوي السطر الأول على أسماء الأعمدة.</li>
+                                    <li>تأكد من تطابق أسماء الأعمدة مع المطلوب.</li>
+                                    <li>يجب أن يكون الملف بترميز UTF-8 لدعم اللغة العربية.</li>
+                                    <li>سيؤدي رفع ملف جديد إلى استبدال جميع البيانات الحالية.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <span class="text-muted">جميع الحقوق محفوظة © مكتبة الكتب العربية 2025</span>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('csvFile');
+            const fileNameDisplay = document.getElementById('fileName');
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    fileNameDisplay.textContent = 'الملف المختار: ' + this.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
